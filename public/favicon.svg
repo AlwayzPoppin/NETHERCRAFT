@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="topGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#a855f7"/>
+      <stop offset="100%" stop-color="#6b21a8"/>
+    </linearGradient>
+    <linearGradient id="leftGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#581c87"/>
+      <stop offset="100%" stop-color="#3b0764"/>
+    </linearGradient>
+    <linearGradient id="rightGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3b0764"/>
+      <stop offset="100%" stop-color="#1e1b4b"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="1.5" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect width="64" height="64" rx="14" fill="#0f172a"/>
+  <rect width="60" height="60" x="2" y="2" rx="12" fill="none" stroke="#7e22ce" stroke-width="1.5" opacity="0.6"/>
+
+  <polygon points="32,10 52,22 32,34 12,22" fill="url(#topGrad)" stroke="#c084fc" stroke-width="1"/>
+  <polygon points="12,22 32,34 32,54 12,42" fill="url(#leftGrad)" stroke="#a855f7" stroke-width="0.8"/>
+  <polygon points="32,34 52,22 52,42 32,54" fill="url(#rightGrad)" stroke="#7e22ce" stroke-width="0.8"/>
+
+  <path d="M 32 34 L 20 27 M 32 34 L 44 27 M 32 34 L 32 48" stroke="#f97316" stroke-width="1.5" filter="url(#glow)" opacity="0.95"/>
+</svg>
