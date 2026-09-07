@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- Seamless Micro Ash Surface Detail (Same Base) -->
+    <filter id="ashGrain" x="0%" y="0%" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="5" result="grain"/>
+      <feColorMatrix type="matrix" values="
+        0.18 0 0 0 0.10
+        0 0.19 0 0 0.11
+        0 0 0.22 0 0.13
+        0 0 0 0.85 0" in="grain" result="ashColor"/>
+    </filter>
+
+    <!-- Broad Soft Organic Volcanic Tone (Same Base) -->
+    <filter id="softVolcanic" x="0%" y="0%" width="100%" height="100%">
+      <feTurbulence type="turbulence" baseFrequency="0.006" numOctaves="3" result="softCloud"/>
+      <feColorMatrix type="matrix" values="
+        0.12 0 0 0 0.08
+        0 0.13 0 0 0.09
+        0 0 0.15 0 0.10
+        0 0 0 0.50 0" in="softCloud"/>
+    </filter>
+
+    <!-- Natural Organic Copper Deposit Shape Filter -->
+    <filter id="mineralDisplace" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="4" result="depositNoise"/>
+      <feDisplacementMap in="SourceGraphic" in2="depositNoise" scale="18" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </defs>
+
+  <!-- 1. Deep Ash Charcoal Base -->
+  <rect width="512" height="512" fill="#17181c"/>
+
+  <!-- 2. Smooth Volcanic Clouding -->
+  <rect width="512" height="512" fill="#282a32" filter="url(#softVolcanic)"/>
+
+  <!-- 3. Fine Ash Grain Surface Texture -->
+  <rect width="512" height="512" fill="#31343e" filter="url(#ashGrain)"/>
+
+  <!-- 4. Natural Raw Copper Ore Deposits (Common Distribution) -->
+  <g filter="url(#mineralDisplace)">
+    <!-- Main Copper Clustered Veins / Nodule Deposits -->
+    <!-- Cluster 1 (Top Right) -->
+    <ellipse cx="360" cy="120" rx="38" ry="24" fill="#c86432"/>
+    <ellipse cx="380" cy="130" rx="22" ry="16" fill="#e68a4e"/>
+    <circle cx="370" cy="115" r="8" fill="#fca86c"/>
+
+    <!-- Cluster 2 (Center Left) -->
+    <ellipse cx="140" cy="260" rx="45" ry="30" fill="#b85628"/>
+    <ellipse cx="125" cy="270" rx="28" ry="18" fill="#e68a4e"/>
+    <circle cx="145" cy="250" rx="10" fill="#fca86c"/>
+
+    <!-- Cluster 3 (Bottom Center-Right) -->
+    <ellipse cx="310" cy="390" rx="42" ry="26" fill="#c86432"/>
+    <ellipse cx="325" cy="380" rx="24" ry="14" fill="#e68a4e"/>
+
+    <!-- Cluster 4 (Top Left Small Fragment) -->
+    <ellipse cx="110" cy="90" rx="22" ry="16" fill="#b85628"/>
+    <circle cx="115" cy="85" r="6" fill="#e68a4e"/>
+
+    <!-- Scattered Small Raw Copper Specks -->
+    <circle cx="220" cy="180" r="12" fill="#c86432"/>
+    <circle cx="230" cy="185" r="6" fill="#fca86c"/>
+    <circle cx="260" cy="310" r="14" fill="#b85628"/>
+    <circle cx="420" cy="270" r="10" fill="#c86432"/>
+    <circle cx="190" cy="420" r="16" fill="#c86432"/>
+  </g>
+</svg>

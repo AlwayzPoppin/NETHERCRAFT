@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- Seamless Micro Ash Surface Detail -->
+    <filter id="ashGrain" x="0%" y="0%" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="5" result="grain"/>
+      <feColorMatrix type="matrix" values="
+        0.18 0 0 0 0.10
+        0 0.19 0 0 0.11
+        0 0 0.22 0 0.13
+        0 0 0 0.85 0" in="grain" result="ashColor"/>
+    </filter>
+
+    <!-- Broad Soft Organic Volcanic Tone -->
+    <filter id="softVolcanic" x="0%" y="0%" width="100%" height="100%">
+      <feTurbulence type="turbulence" baseFrequency="0.006" numOctaves="3" result="softCloud"/>
+      <feColorMatrix type="matrix" values="
+        0.12 0 0 0 0.08
+        0 0.13 0 0 0.09
+        0 0 0.15 0 0.10
+        0 0 0 0.50 0" in="softCloud"/>
+    </filter>
+  </defs>
+
+  <!-- 1. Deep Ash Charcoal Base -->
+  <rect width="512" height="512" fill="#17181c"/>
+
+  <!-- 2. Smooth Volcanic Clouding (No hard edges or lines) -->
+  <rect width="512" height="512" fill="#282a32" filter="url(#softVolcanic)"/>
+
+  <!-- 3. Fine Ash Grain Surface Texture -->
+  <rect width="512" height="512" fill="#31343e" filter="url(#ashGrain)"/>
+</svg>
