@@ -1,0 +1,21 @@
+{
+  "name": "minecraft-game",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "sync-assets": "cmd /c \"xcopy ..\\public\\* .\\public\\ /S /E /Y /D & xcopy .\\public\\* ..\\public\\ /S /E /Y /D\"",
+    "dev": "npm run sync-assets && vite --host --port 3001 --strictPort",
+    "build": "npm run sync-assets && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "simplex-noise": "^4.0.1",
+    "three": "^0.160.0"
+  },
+  "devDependencies": {
+    "@types/three": "^0.160.0",
+    "jimp": "^1.6.1",
+    "typescript": "^5.3.3",
+    "vite": "^5.1.4"
+  }
+}

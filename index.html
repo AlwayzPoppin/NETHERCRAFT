@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NetherCraft 3D - Dark Fantasy Voxel Sandbox</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="shortcut icon" href="/favicon.svg">
+  <link rel="stylesheet" href="/src/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div id="game-container">
+    <canvas id="webgl-canvas"></canvas>
+
+    <!-- Crosshair & Mining Radial Progress Ring -->
+    <div id="crosshair">
+      <svg id="crosshair-radial-ring" class="crosshair-ring hidden" viewBox="0 0 44 44" width="44" height="44">
+        <circle class="crosshair-ring-bg" cx="22" cy="22" r="17" />
+        <circle id="crosshair-ring-fill" class="crosshair-ring-fill" cx="22" cy="22" r="17" />
+      </svg>
+    </div>
+
+    <!-- Underwater Screen Overlay -->
+    <div id="underwater-overlay" class="hidden"></div>
+
+    <!-- Oxygen Depletion Vignette Overlay -->
+    <div id="oxygen-vignette" class="vignette-overlay hidden" style="opacity: 0;"></div>
+
+    <!-- Critical Health Heartbeat Vignette Overlay -->
+    <div id="critical-health-vignette" class="vignette-overlay hidden" style="opacity: 0;"></div>
+
+    <!-- Damage Red Flash Overlay -->
+    <div id="damage-overlay" class="hidden"></div>
+
+    <!-- Top HUD Bar: Compass Tape & Coordinates -->
+    <div id="compass-container">
+      <div id="compass-tape-wrapper">
+        <canvas id="compass-canvas" width="320" height="28"></canvas>
+        <div id="compass-center-indicator"></div>
+      </div>
+      <div id="compass-coords">X: <span id="coord-x">0</span> | Y: <span id="coord-y">0</span> | Z: <span id="coord-z">0</span><span id="compass-ground-info" class="compass-ground-badge"></span></div>
+      <!-- Day & Night Cycle Clock & Phase Timer Widget -->
+      <div id="day-night-widget" class="day-night-badge phase-day">
+        <span id="time-icon">☀️</span>
+        <span id="time-day">Day 1</span>
+        <span class="time-divider">•</span>
+        <span id="time-clock">12:00 PM</span>
+        <span id="time-countdown" class="time-countdown-tag">Dusk in 2:00</span>
+      </div>
+    </div>
+
+    <!-- Biome Location Banner HUD Toast -->
+    <div id="biome-banner-container" class="hidden">
+      <div id="biome-banner-card">
+        <div id="biome-banner-icon">🌲</div>
+        <div id="biome-banner-text">
+          <div id="biome-banner-title">EMERALD GROVE</div>
+          <div id="biome-banner-subtitle">Lush Overworld Canopy</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HUD Overlay -->
+    <div id="hud">
+      <!-- Status bars -->
+      <div id="status-container">
+        <div id="health-bar" class="stat-bar"></div>
+        <div id="stamina-bar" class="stat-bar hidden"></div>
+        <div id="oxygen-bar" class="stat-bar hidden"></div>
+        <div id="hunger-bar" class="stat-bar"></div>
+      </div>
+
+      <!-- Hotbar -->
+      <div id="hotbar-container">
+        <div id="hotbar">
+          <!-- 9 hotbar slots -->
+          <div class="hotbar-slot active" data-index="0"><div class="slot-number">1</div><canvas class="slot-icon"></canvas><span class="item-count"></span><span class="slot-label">Grass</span></div>
+          <div class="hotbar-slot" data-index="1"><div class="slot-number">2</div><canvas class="slot-icon"></canvas><span class="item-count"></span><span class="slot-label">Dirt</span></div>
+          <div class="hotbar-slot" data-index="2"><div class="slot-number">3</div><canvas class="slot-icon"></canvas><span class="item-count"></span><span class="slot-label">Stone</span></div>
+          <div class="hotbar-slot" data-index="3"><div class="slot-number">4</div><canvas class="slot-icon"></canvas><span class="item-count"></span><span class="slot-label">Oak Log</span></div>
+          <div class="hotbar-slot" data-index="4"><div class="slot-number">5</div><canvas class="slot-icon"></canvas><span class="item-count"></span><span class="slot-label">Leaves</span></div>
+          <div class="hotbar-slot" data-index="5"><div class="slot-number">6</div><canvas class="slot-icon"></canvas><span class="item-count"></span><span class="slot-label">Planks</span></div>
+          <div class="hotbar-slot" data-index="6"><div class="slot-number">7</div><canvas class="slot-icon"></canvas><span class="item-count"></span><span class="slot-label">Brick</span></div>
+          <div class="hotbar-slot" data-index="7"><div class="slot-number">8</div><canvas class="slot-icon"></canvas><span class="item-count"></span><span class="slot-label">Glass</span></div>
+          <div class="hotbar-slot" data-index="8"><div class="slot-number">9</div><canvas class="slot-icon"></canvas><span class="item-count"></span><span class="slot-label">TNT</span></div>
+        </div>
+      </div>
+
+      <!-- Gamepad Button Guide HUD Overlay -->
+      <div id="gamepad-hud" class="gamepad-hud hidden">
+        <div class="controller-badge">🎮 CONTROLLER CONNECTED</div>
+        <div class="gamepad-controls-list">
+          <span class="gamepad-key"><span class="btn-icon">RT</span> Mine</span>
+          <span class="gamepad-key"><span class="btn-icon">LT</span> Place</span>
+          <span class="gamepad-key"><span class="btn-icon">A</span> Jump</span>
+          <span class="gamepad-key"><span class="btn-icon">B</span> Sneak</span>
+          <span class="gamepad-key"><span class="btn-icon">X</span> Inventory</span>
+          <span class="gamepad-key"><span class="btn-icon">Y</span> Fly</span>
+          <span class="gamepad-key"><span class="btn-icon">LB/RB</span> Item</span>
+        </div>
+      </div>
+
+      <!-- Interactive Harvest & Pick Up Prompt -->
+      <div id="interact-prompt" class="interact-prompt hidden">
+        <span id="interact-prompt-key" class="interact-key-badge">E</span>
+        <span id="interact-prompt-text" class="interact-prompt-text">Pick Up</span>
+      </div>
+    </div>
+
+    <!-- F3 Debug Screen -->
+    <div id="debug-overlay" class="hidden">
+      <h3>NetherCraft 3D Debug (F3)</h3>
+      <div id="debug-info">
+        <p>FPS: <span id="debug-fps">60</span></p>
+        <p>XYZ: <span id="debug-pos">0.00 / 0.00 / 0.00</span></p>
+        <p>Facing: <span id="debug-dir">North</span></p>
+        <p>Biome: <span id="debug-biome">Plains</span></p>
+        <p>Targeted Block: <span id="debug-target">None</span></p>
+        <p>Loaded Chunks: <span id="debug-chunks">0</span></p>
+        <p>Flight Mode: <span id="debug-fly">OFF (Press F)</span></p>
+      </div>
+    </div>
+
+    <!-- World Loading / Generation Overlay -->
+    <div id="loading-overlay" class="overlay-screen loading-overlay hidden">
+      <div class="card glass-card loading-card">
+        <h2 id="loading-status-text" class="loading-status">HARVESTING ETHERIC LEYLINES...</h2>
+        <div class="progress-bar-container">
+          <div id="loading-progress-fill" class="progress-bar-fill" style="width: 0%;"></div>
+        </div>
+        <p id="loading-percent-text" class="loading-percent">0% (0 / 25 Chunks)</p>
+        <p class="loading-tip">Tip: Press <kbd>F</kbd> in game to toggle Flight Mode!</p>
+      </div>
+    </div>
+
+    <!-- Start / AAA Title Screen Overlay -->
+    <div id="start-overlay" class="overlay-screen full-bleed-menu">
+      <div id="menu-backdrop-img" style="background-image: url('/textures/ui/NETHERCRAFT TITLE SCREEN.png');"></div>
+      <canvas id="title-particle-canvas"></canvas>
+      <div class="vignette-overlay"></div>
+
+      <div class="menu-content-container">
+        <!-- Stage 1: Initial Splash Prompt -->
+        <div id="splash-prompt-container" class="splash-prompt-container">
+          <p class="pulse-splash-text">▶ CLICK ANYWHERE TO START ◀</p>
+          <p class="splash-subtext">OR PRESS ANY KEY</p>
+        </div>
+
+        <!-- Stage 2: Main Menu Stack (Revealed on Splash Click) -->
+        <div id="main-menu-stack" class="main-menu-stack hidden-menu-stack">
+          <button id="btn-new-game" class="btn btn-hero-play">
+            SINGLE PLAYER
+          </button>
+          <button id="btn-multiplayer" class="btn btn-menu-stack btn-multiplayer-mode">
+            MULTIPLAYER <span class="multiplayer-badge">SOON</span>
+          </button>
+          <button id="btn-load-game" class="btn btn-menu-stack">
+            LOAD GAME <span id="save-badge" class="save-badge hidden">SAVED</span>
+          </button>
+          <button id="btn-menu-settings" class="btn btn-menu-stack">
+            SETTINGS
+          </button>
+          <button id="btn-character-customization" class="btn btn-menu-stack">
+            CUSTOMIZATION
+          </button>
+          <button id="btn-toggle-controls" class="btn btn-menu-stack">
+            CONTROLS
+          </button>
+        </div>
+      </div>
+
+      <!-- Character Customization Placeholder Modal -->
+      <div id="character-customization-modal" class="modal-overlay hidden">
+        <div class="card glass-card settings-card" style="text-align: center;">
+          <div class="modal-header">
+            <h2>CHARACTER CUSTOMIZATION</h2>
+            <button id="btn-close-character-modal" class="btn-close">&times;</button>
+          </div>
+          <div class="settings-panel" style="display: flex; gap: 28px; padding: 24px;">
+            <div id="character-preview-container" style="flex: 1.6; position: relative; min-height: 500px; border: 2px solid #333; border-radius: 12px; background: rgba(0,0,0,0.6); overflow: hidden;">
+            </div>
+            <div style="flex: 1; text-align: left; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; padding-right: 8px;">
+              <div class="setting-group" style="margin-bottom: 8px;">
+                <label style="display: flex; flex-direction: column; gap: 4px; font-weight: bold; color: #fbbf24; text-align: left;">
+                  GENDER / BODY TYPE
+                  <div id="gender-toggle" style="display: flex; gap: 0; border-radius: 6px; overflow: hidden; border: 1px solid #555;">
+                    <button id="btn-gender-male" class="gender-btn active" style="flex: 1; padding: 10px 16px; background: #eab308; color: #000; border: none; cursor: pointer; font-weight: bold; font-size: 14px; transition: all 0.2s;">♂ MALE</button>
+                    <button id="btn-gender-female" class="gender-btn" style="flex: 1; padding: 10px 16px; background: #333; color: #ccc; border: none; cursor: pointer; font-weight: bold; font-size: 14px; transition: all 0.2s;">♀ FEMALE</button>
+                  </div>
+                </label>
+              </div>
+
+              <div class="setting-group" style="margin-bottom: 8px;">
+                <label style="display: flex; flex-direction: column; gap: 4px; font-weight: bold; color: #fbbf24; text-align: left;">
+                  ETHNICITY
+                  <div id="ethnicity-toggle" style="display: flex; gap: 0; border-radius: 6px; overflow: hidden; border: 1px solid #555;">
+                    <button id="btn-ethnicity-white" class="ethnicity-btn active" style="flex: 1; padding: 10px 16px; background: #eab308; color: #000; border: none; cursor: pointer; font-weight: bold; font-size: 14px; transition: all 0.2s;">WHITE</button>
+                    <button id="btn-ethnicity-black" class="ethnicity-btn" style="flex: 1; padding: 10px 16px; background: #333; color: #ccc; border: none; cursor: pointer; font-weight: bold; font-size: 14px; transition: all 0.2s;">BLACK</button>
+                  </div>
+                </label>
+              </div>
+
+              <div class="setting-group" style="margin-bottom: 8px;">
+                <label style="display: flex; flex-direction: column; gap: 4px; font-weight: bold; color: #fbbf24; text-align: left;">
+                  RACE SELECTION
+                  <select id="select-race" style="padding: 10px 14px; border-radius: 6px; background: #222; color: #fff; border: 1px solid #555; font-size: 14px; font-weight: bold; width: 100%; cursor: pointer;">
+                    <option value="human">Human</option>
+                    <option value="ogre">Ogre</option>
+                    <option value="reptilian">Reptilian</option>
+                  </select>
+                </label>
+              </div>
+
+              <hr style="border: 0; border-top: 1px solid #444; margin: 8px 0;">
+
+              <div id="appearance-options-header" style="font-size: 13px; color: #fbbf24; font-weight: bold; text-transform: uppercase; margin-bottom: 6px; text-align: left; letter-spacing: 0.5px;">Appearance Options</div>
+
+              <div id="group-hair-style" class="setting-group" style="margin-bottom: 8px;">
+                <label style="display: flex; justify-content: space-between; align-items: center; font-weight: bold; color: #ccc;">
+                  <span>Hair Style</span>
+                  <select id="select-hair-style" style="padding: 6px 10px; border-radius: 6px; background: #1a1a24; color: #fff; border: 1px solid #555; font-size: 12px; cursor: pointer; font-weight: 500;">
+                    <option value="short">Short Cropped</option>
+                    <option value="messy">Messy Adventurer</option>
+                    <option value="braided">Warrior Braids</option>
+                    <option value="bald">Clean Shaved</option>
+                  </select>
+                </label>
+              </div>
+
+              <div id="group-hair-color" class="setting-group" style="margin-bottom: 8px;">
+                <label style="display: flex; justify-content: space-between; align-items: center; font-weight: bold; color: #ccc;">
+                  <span>Hair Color</span>
+                  <input type="color" id="color-hair" value="#78350f" style="border: 2px solid #555; border-radius: 6px; width: 44px; height: 30px; cursor: pointer; background: #111; padding: 2px;">
+                </label>
+              </div>
+
+              <div id="group-clothing-color" class="setting-group" style="margin-bottom: 8px;">
+                <label style="display: flex; justify-content: space-between; align-items: center; font-weight: bold; color: #ccc;">
+                  <span>Clothing Tint</span>
+                  <input type="color" id="color-clothing" value="#1e293b" style="border: 2px solid #555; border-radius: 6px; width: 44px; height: 30px; cursor: pointer; background: #111; padding: 2px;">
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Settings Modal with Tab Toggles -->
+      <div id="menu-settings-modal" class="modal-overlay hidden">
+        <div class="card glass-card settings-card">
+          <div class="modal-header">
+            <h2>GAME SETTINGS</h2>
+            <button id="btn-close-settings-modal" class="btn-close">&times;</button>
+          </div>
+
+          <!-- Settings Tab Toggles -->
+          <div class="settings-tabs">
+            <button id="tab-client-settings" class="tab-btn active">CLIENT SETTINGS</button>
+            <button id="tab-keybind-settings" class="tab-btn">KEYBINDINGS</button>
+            <button id="tab-world-settings" class="tab-btn">WORLD RULES</button>
+          </div>
+
+          <!-- Tab 1: Client Settings -->
+          <div id="panel-client-settings" class="settings-panel">
+            <div class="settings-grid">
+              <div class="setting-group">
+                <label>Graphics Quality Preset</label>
+                <select id="select-graphics-mode" class="select-input">
+                  <option value="ultra">Ultra Mode (Full Shadows & Lighting)</option>
+                  <option value="performance">Performance Mode (Shadows Off / Max FPS)</option>
+                </select>
+              </div>
+              <div class="setting-group">
+                <label>Depth of Field (DoF): <span id="val-dof-menu">35</span>%</label>
+                <input type="range" id="slider-dof-menu" min="0" max="100" step="1" value="35">
+              </div>
+              <div class="setting-group">
+                <label>FOV: <span id="val-fov-menu">75</span>°</label>
+                <input type="range" id="slider-fov-menu" min="60" max="110" value="75">
+              </div>
+              <div class="setting-group">
+                <label>Render Distance: <span id="val-render-dist-menu">4</span> Chunks</label>
+                <input type="range" id="slider-render-dist-menu" min="2" max="8" value="4">
+              </div>
+              <div class="setting-group">
+                <label>Leaf Opacity: <span id="val-leaf-opacity-menu">0.88</span></label>
+                <input type="range" id="slider-leaf-opacity-menu" min="0.1" max="1.0" step="0.01" value="0.88">
+              </div>
+              <div class="setting-group">
+                <label>Brightness: <span id="val-brightness-menu">115</span>%</label>
+                <input type="range" id="slider-brightness-menu" min="50" max="180" value="115">
+              </div>
+              <div class="setting-group">
+                <label>Contrast: <span id="val-contrast-menu">110</span>%</label>
+                <input type="range" id="slider-contrast-menu" min="50" max="180" value="110">
+              </div>
+              <div class="setting-group">
+                <label>Mouse Sensitivity: <span id="val-sens-menu">1.0</span>x</label>
+                <input type="range" id="slider-sens-menu" min="0.1" max="2.0" step="0.1" value="1.0">
+              </div>
+              <div class="setting-group checkbox-group">
+                <label><input type="checkbox" id="check-invert-y"> Invert Y-Axis</label>
+              </div>
+              <div class="setting-group">
+                <label>Master Volume: <span id="val-volume-menu">100</span>%</label>
+                <input type="range" id="slider-volume-menu" min="0" max="100" value="100">
+              </div>
+              <div class="setting-group">
+                <label>Music Volume: <span id="val-music-menu">100</span>%</label>
+                <input type="range" id="slider-music-menu" min="0" max="100" value="100">
+              </div>
+              <div class="setting-group">
+                <label>SFX Volume: <span id="val-sfx-menu">100</span>%</label>
+                <input type="range" id="slider-sfx-menu" min="0" max="100" value="100">
+              </div>
+              <div class="setting-group">
+                <label>Biome Ambience: <span id="val-ambiance-menu">100</span>%</label>
+                <input type="range" id="slider-ambiance-menu" min="0" max="100" value="100">
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab 2: Keybindings -->
+          <div id="panel-keybind-settings" class="settings-panel hidden">
+            <div class="keybindings-table" id="keybindings-list">
+              <!-- Rebinding rows dynamically populated by UIManager -->
+            </div>
+          </div>
+
+          <!-- Tab 3: World Rules -->
+          <div id="panel-world-settings" class="settings-panel hidden">
+            <div class="settings-grid">
+              <div class="setting-group">
+                <label>Day/Night Cycle Speed</label>
+                <select id="select-day-speed" class="select-input">
+                  <option value="1">Normal (1.0x)</option>
+                  <option value="2">Fast (2.0x)</option>
+                  <option value="0">Freeze Time</option>
+                </select>
+              </div>
+              <div class="setting-group">
+                <label>Game Mode</label>
+                <select id="select-gamemode" class="select-input">
+                  <option value="survival">Survival (Harvest & Build)</option>
+                  <option value="creative">Creative (Unlimited & Flight)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer" style="display: flex; gap: 12px; justify-content: flex-end;">
+            <button id="btn-reset-settings-menu" class="btn btn-secondary" style="width: auto;">RESET TO DEFAULTS</button>
+            <button id="btn-save-settings" class="btn btn-primary" style="width: auto;">SAVE & BACK</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- New Game Creation Modal -->
+      <div id="new-game-modal" class="modal-overlay hidden">
+        <div class="card glass-card load-card">
+          <div class="modal-header">
+            <h2>NEW WORLD CREATION</h2>
+            <button id="btn-close-new-game-modal" class="btn-close">&times;</button>
+          </div>
+          <div class="settings-grid">
+            <div class="setting-group">
+              <label>Game Session Mode</label>
+              <div class="mode-toggle-group" id="session-type-toggle">
+                <button type="button" id="btn-session-single" class="session-btn active">SINGLE PLAYER</button>
+                <button type="button" id="btn-session-multi" class="session-btn">MULTIPLAYER <span class="badge-pill">SOON</span></button>
+              </div>
+            </div>
+            <div class="setting-group">
+              <label>World Seed (Leave empty for random)</label>
+              <input type="text" id="input-world-seed" class="text-input" placeholder="e.g. 1337 or NetherGrove">
+            </div>
+            <div class="setting-group">
+              <label>Game Mode</label>
+              <select id="select-new-gamemode" class="select-input">
+                <option value="survival">Survival Mode (Harvest & Build)</option>
+                <option value="creative">Creative Mode (Unlimited & Flight)</option>
+              </select>
+            </div>
+            <div class="setting-group">
+              <label>Day/Night Cycle Speed</label>
+              <select id="select-new-day-speed" class="select-input">
+                <option value="1">Normal Speed (1.0x)</option>
+                <option value="2">Fast Speed (2.0x)</option>
+                <option value="0.5">Slow Speed (0.5x)</option>
+                <option value="0">Freeze Time</option>
+              </select>
+            </div>
+          </div>
+          <div class="modal-actions-column">
+            <button id="btn-confirm-create-world" class="btn btn-hero-play">▶ GENERATE WORLD</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Multiplayer Realms Placeholder Modal -->
+      <div id="multiplayer-modal" class="modal-overlay hidden">
+        <div class="card glass-card load-card" style="max-width: 560px;">
+          <div class="modal-header">
+            <h2>MULTIPLAYER REALMS</h2>
+            <button id="btn-close-multiplayer-modal" class="btn-close">&times;</button>
+          </div>
+          <div class="multiplayer-content">
+            <div class="multiplayer-status-badge">
+              <span class="pulse-dot"></span> P2P REALM NETWORK • IN ACTIVE DEVELOPMENT
+            </div>
+            
+            <div class="server-list-container">
+              <div class="server-card active">
+                <div class="server-icon">🏰</div>
+                <div class="server-info">
+                  <div class="server-name">Official NetherCraft Realm #1</div>
+                  <div class="server-meta">US-East • Survival 1.0 • 24ms</div>
+                </div>
+                <span class="server-tag">v1.2 SOON</span>
+              </div>
+              
+              <div class="server-card">
+                <div class="server-icon">📡</div>
+                <div class="server-info">
+                  <div class="server-name">Local LAN Broadcast</div>
+                  <div class="server-meta">Scanning local network for NetherCraft hosts...</div>
+                </div>
+                <span class="server-tag searching">SCANNING</span>
+              </div>
+            </div>
+
+            <div class="direct-connect-box">
+              <label style="display: block; margin-bottom: 6px; font-weight: 600; font-size: 13px; color: #cbd5e1;">Direct Server IP / Host Address</label>
+              <div class="direct-connect-input-row" style="display: flex; gap: 8px;">
+                <input type="text" id="input-server-ip" class="text-input" value="realm.nethercraft.gg:25565" placeholder="Enter IP:port" style="flex: 1;">
+                <button id="btn-direct-connect" class="btn btn-secondary" style="width: auto; padding: 10px 18px;">JOIN</button>
+              </div>
+            </div>
+
+            <div id="multiplayer-feedback" class="multiplayer-feedback-msg hidden"></div>
+          </div>
+          <div class="modal-actions-column" style="margin-top: 18px; display: flex; flex-direction: column; gap: 10px;">
+            <button id="btn-host-lan" class="btn btn-menu-outline">📡 HOST LOCAL LAN REALM</button>
+            <button id="btn-back-from-multiplayer" class="btn btn-hero-play">▶ PLAY SINGLE PLAYER</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Load Game Modal -->
+      <div id="menu-load-modal" class="modal-overlay hidden">
+        <div class="card glass-card load-card">
+          <div class="modal-header">
+            <h2>SAVED WORLD DATA</h2>
+            <button id="btn-close-load-modal" class="btn-close">&times;</button>
+          </div>
+          <div id="save-info-container" class="save-info-box">
+            <p class="save-title">Slot 1: NetherCraft Survival World</p>
+            <p class="save-detail">World Seed: <span id="save-seed-text">1337</span></p>
+            <p class="save-detail">Last Saved: <span id="save-date-text">None</span></p>
+            <p class="save-detail">Saved Blocks: <span id="save-blocks-text">0</span></p>
+          </div>
+          <div class="modal-actions-column">
+            <button id="btn-confirm-load" class="btn btn-hero-play">▶ CONTINUE SAVED WORLD</button>
+            <button id="btn-delete-save" class="btn btn-danger">DELETE SAVE</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Workstation Crafting & Armor Fitting Modal -->
+      <div id="workstation-overlay" class="modal-overlay hidden">
+        <div class="card glass-card workstation-card" style="width: 600px; max-width: 95vw;">
+          <div class="modal-header">
+            <h2 id="workstation-title" style="color: #fbbf24; font-size: 18px;">WORKSTATION CRAFTING</h2>
+            <button id="btn-close-workstation" class="btn-close">&times;</button>
+          </div>
+          <div style="padding: 15px;">
+            <p id="workstation-desc" style="color: #94a3b8; font-size: 12px; margin-bottom: 12px; text-align: center;">Select a recipe to craft tools, station upgrades, or armor gear pieces.</p>
+            <div id="workstation-recipes-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; max-height: 380px; overflow-y: auto; padding-right: 5px;">
+              <!-- Recipes rendered dynamically by UIManager -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Collapsible Controls Drawer -->
+      <div id="controls-drawer" class="controls-drawer hidden">
+        <div class="controls-drawer-content">
+          <div class="drawer-header">
+            <h3>GAME CONTROLS</h3>
+            <button id="btn-close-controls" class="btn-close">&times;</button>
+          </div>
+          <div class="controls-grid">
+            <div class="ctrl-item"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> <span>Move</span></div>
+            <div class="ctrl-item"><kbd>Space</kbd> <span>Jump / Swim</span></div>
+            <div class="ctrl-item"><kbd>Shift</kbd> <span>Sneak / Descend</span></div>
+            <div class="ctrl-item"><kbd>R</kbd> / <kbd>Z</kbd> <span>☁️ Summon Nimbus Mount</span></div>
+            <div class="ctrl-item"><kbd>F5</kbd> / <kbd>C</kbd> <span>Toggle 3rd Person</span></div>
+            <div class="ctrl-item"><kbd>Alt</kbd> / <kbd>Q</kbd> <span>Dodge Roll / Evade</span></div>
+            <div class="ctrl-item"><kbd>F</kbd> <span>Toggle Flight Mode</span></div>
+            <div class="ctrl-item"><kbd>Left Click</kbd> <span>Break Block / Attack</span></div>
+            <div class="ctrl-item"><kbd>Right Click</kbd> <span>Place Block</span></div>
+            <div class="ctrl-item"><kbd>1</kbd>-<kbd>9</kbd> / <kbd>Scroll</kbd> <span>Hotbar Slot</span></div>
+            <div class="ctrl-item"><kbd>E</kbd> / <kbd>Tab</kbd> <span>Survival Tome / Inventory</span></div>
+            <div class="ctrl-item"><kbd>F3</kbd> <span>Debug Overlay</span></div>
+            <div class="ctrl-item"><kbd>Esc</kbd> <span>Pause & Settings</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Inventory Screen ('E') -->
+    <div id="inventory-overlay" class="overlay-screen hidden">
+      <div class="card glass-card inventory-card">
+        <div class="card-header">
+          <h2>BLOCK INVENTORY</h2>
+          <button id="btn-close-inventory" class="btn-close">&times;</button>
+        </div>
+        <p class="hint">Click any block to set it into your selected Hotbar slot</p>
+        <div id="inventory-grid"></div>
+      </div>
+    </div>
+
+    <!-- Character Death Screen Overlay -->
+    <div id="death-overlay" class="overlay-screen hidden">
+      <div class="card glass-card death-card">
+        <div class="modal-header death-header">
+          <h2 class="death-title">☠ YOU DIED ☠</h2>
+          <p class="death-subtitle">You fell to the dark terrors of the NetherCraft Realm</p>
+        </div>
+
+        <div class="death-actions-group">
+          <button id="btn-respawn" class="btn btn-hero-play btn-death-respawn">
+            ↺ RESPAWN AT SPAWNPOINT
+          </button>
+          <button id="btn-death-load" class="btn btn-death-action">
+            📂 LOAD LAST SAVE
+          </button>
+          <button id="btn-death-quit" class="btn btn-death-action btn-death-danger">
+            🚪 QUIT TO MAIN MENU
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pause & Settings Screen ('Esc') -->
+    <div id="pause-overlay" class="overlay-screen hidden">
+      <div class="card glass-card pause-card">
+        <div class="modal-header pause-header">
+          <h2 class="pause-title">✦ GAME PAUSED ✦</h2>
+        </div>
+
+        <div class="pause-actions-group">
+          <button id="btn-resume" class="btn btn-hero-play btn-pause-resume">
+            ▶ RESUME GAME
+          </button>
+          <div class="pause-btn-row">
+            <button id="btn-pause-settings" class="btn btn-pause-action">
+              ⚙ GAME SETTINGS
+            </button>
+            <button id="btn-pause-dev" class="btn btn-pause-action btn-pause-dev">
+              🚀 DEV TOOLS
+            </button>
+            <button id="btn-save-world-pause" class="btn btn-pause-action">
+              💾 SAVE WORLD
+            </button>
+            <button id="btn-exit-to-menu" class="btn btn-pause-action btn-pause-danger">
+              🚪 SAVE & EXIT
+            </button>
+          </div>
+        </div>
+
+        <!-- Categorized Settings Containers -->
+        <div class="pause-settings-container">
+          <!-- Client Settings Box -->
+          <div class="settings-box">
+            <h4 class="box-title">⚙ CLIENT CONFIGURATION</h4>
+            <div class="setting-row">
+              <label for="slider-fov">Field of View (FOV): <span id="val-fov" class="accent-text">75</span>°</label>
+              <input type="range" id="slider-fov" min="50" max="110" value="75" class="dark-slider">
+            </div>
+            <div class="setting-row">
+              <label for="slider-render-dist">Render Distance: <span id="val-render-dist" class="accent-text">4</span> Chunks</label>
+              <input type="range" id="slider-render-dist" min="2" max="8" value="4" class="dark-slider">
+            </div>
+            <div class="setting-row">
+              <label for="slider-leaf-opacity">Leaf Opacity: <span id="val-leaf-opacity" class="accent-text">0.88</span></label>
+              <input type="range" id="slider-leaf-opacity" min="0.1" max="1.0" step="0.01" value="0.88" class="dark-slider">
+            </div>
+            <div class="setting-row">
+              <label for="slider-brightness">Brightness: <span id="val-brightness" class="accent-text">115</span>%</label>
+              <input type="range" id="slider-brightness" min="50" max="180" value="115" class="dark-slider">
+            </div>
+            <div class="setting-row">
+              <label for="slider-contrast">Contrast: <span id="val-contrast" class="accent-text">110</span>%</label>
+              <input type="range" id="slider-contrast" min="50" max="180" value="110" class="dark-slider">
+            </div>
+            <div class="setting-row">
+              <label for="slider-dof-pause">Depth of Field (DoF): <span id="val-dof-pause" class="accent-text">35</span>%</label>
+              <input type="range" id="slider-dof-pause" min="0" max="100" step="1" value="35" class="dark-slider">
+            </div>
+            <div class="setting-row">
+              <label for="slider-volume">Master Volume: <span id="val-volume" class="accent-text">80</span>%</label>
+              <input type="range" id="slider-volume" min="0" max="100" value="80" class="dark-slider">
+            </div>
+            <div class="setting-row">
+              <label for="slider-music">Music Volume: <span id="val-music" class="accent-text">80</span>%</label>
+              <input type="range" id="slider-music" min="0" max="100" value="80" class="dark-slider">
+            </div>
+            <div class="setting-row">
+              <label for="slider-sfx">SFX Volume: <span id="val-sfx" class="accent-text">80</span>%</label>
+              <input type="range" id="slider-sfx" min="0" max="100" value="80" class="dark-slider">
+            </div>
+            <div class="setting-row">
+              <label for="slider-ambiance">Biome Ambience Volume: <span id="val-ambiance" class="accent-text">80</span>%</label>
+              <input type="range" id="slider-ambiance" min="0" max="100" value="80" class="dark-slider">
+            </div>
+          </div>
+
+          <!-- World Rules Box (Hidden in Survival Mode) -->
+          <div id="box-world-rules" class="settings-box hidden">
+            <h4 class="box-title">🌍 WORLD RULES (CREATIVE ONLY)</h4>
+            <div class="setting-row">
+              <label for="slider-day-speed">Day/Night Cycle Speed</label>
+              <input type="range" id="slider-day-speed" min="0" max="5" step="0.5" value="1" class="dark-slider">
+            </div>
+            <!-- Reset to Defaults Button Row -->
+            <div class="pause-settings-footer" style="margin-top: 10px; width: 100%;">
+              <button id="btn-reset-settings-pause" class="btn btn-secondary" style="padding: 10px 18px; font-size: 13px;">RESET TO DEFAULTS</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Survival Tome RPG Menu Modal -->
+    <div id="survival-tome-modal" class="modal-overlay tome-overlay hidden">
+      <div class="tome-book-container">
+        <!-- Close Button -->
+        <button id="btn-close-tome" class="tome-close-btn">&times;</button>
+        
+        <!-- Left Page: Equipment & 3D Character Viewport -->
+        <div class="tome-left-page">
+          <!-- 3 Left Equipment Slots (Head, Chest, Boots) -->
+          <div class="tome-equip-column tome-equip-left">
+            <div class="tome-equip-slot" id="equip-slot-head" data-slot="head" title="Head / Helmet">
+              <span class="slot-placeholder-icon">🪖</span>
+            </div>
+            <div class="tome-equip-slot" id="equip-slot-chest" data-slot="chest" title="Chest / Armor">
+              <span class="slot-placeholder-icon">🥋</span>
+            </div>
+            <div class="tome-equip-slot" id="equip-slot-boots" data-slot="boots" title="Feet / Boots">
+              <span class="slot-placeholder-icon">👢</span>
+            </div>
+          </div>
+
+          <!-- Central 3D Avatar Canvas Viewport -->
+          <div class="tome-viewport-frame" id="tome-avatar-container">
+            <canvas id="tome-avatar-canvas"></canvas>
+            <div class="tome-viewport-hint">DRAG TO ROTATE</div>
+          </div>
+
+          <!-- 3 Right Equipment Slots (Main Hand, Off Hand, Relic) -->
+          <div class="tome-equip-column tome-equip-right">
+            <div class="tome-equip-slot" id="equip-slot-mainhand" data-slot="mainhand" title="Main Hand Weapon">
+              <span class="slot-placeholder-icon">🗡️</span>
+            </div>
+            <div class="tome-equip-slot" id="equip-slot-offhand" data-slot="offhand" title="Off-Hand / Shield">
+              <span class="slot-placeholder-icon">🛡️</span>
+            </div>
+            <div class="tome-equip-slot" id="equip-slot-relic" data-slot="relic" title="Accessory / Relic">
+              <span class="slot-placeholder-icon">💍</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Page: Tabs & 48-Slot Matrix / Crafting / Stats -->
+        <div class="tome-right-page">
+          <!-- Top Tab Navigation -->
+          <div class="tome-tabs-header">
+            <button class="tome-tab-btn active" data-tab="inventory">📦 INVENTORY</button>
+            <button class="tome-tab-btn" data-tab="crafting">⚒ CRAFTING</button>
+            <button class="tome-tab-btn" data-tab="attributes">📊 ATTRIBUTES</button>
+          </div>
+
+          <!-- Tab Content 1: 48-Slot Inventory Grid -->
+          <div class="tome-tab-pane active" id="tome-tab-inventory">
+            <div class="tome-inventory-grid" id="tome-grid-container">
+              <!-- 48 slots dynamically injected (8 cols x 6 rows) -->
+            </div>
+          </div>
+
+          <!-- Tab Content 2: Survival Crafting -->
+          <div class="tome-tab-pane" id="tome-tab-crafting">
+            <div class="tome-crafting-container">
+              <div class="tome-recipes-list" id="tome-recipes-list">
+                <!-- Recipes injected dynamically -->
+              </div>
+              <div class="tome-recipe-detail" id="tome-recipe-detail">
+                <h4 id="recipe-detail-title">Select a Recipe</h4>
+                <p id="recipe-detail-desc" class="recipe-desc">Select a survival recipe to view required resources and craft.</p>
+                <div id="recipe-materials-list" class="recipe-materials"></div>
+                <button id="btn-craft-item" class="btn-tome-craft disabled" disabled>CRAFT ITEM</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab Content 3: Player Attributes & RPG Stats -->
+          <div class="tome-tab-pane" id="tome-tab-attributes">
+            <div class="tome-stats-container">
+              <div class="tome-stat-card">
+                <span class="stat-name">❤️ Max Health</span>
+                <span class="stat-val" id="stat-max-hp">20 / 20</span>
+              </div>
+              <div class="tome-stat-card">
+                <span class="stat-name">⚡ Max Stamina</span>
+                <span class="stat-val" id="stat-max-stam">100 / 100</span>
+              </div>
+              <div class="tome-stat-card">
+                <span class="stat-name">🛡️ Armor Rating</span>
+                <span class="stat-val" id="stat-armor">0</span>
+              </div>
+              <div class="tome-stat-card">
+                <span class="stat-name">⚔️ Attack Power</span>
+                <span class="stat-val" id="stat-attack">4 (Fists)</span>
+              </div>
+              <div class="tome-stat-card">
+                <span class="stat-name">🔥 Burn Resistance</span>
+                <span class="stat-val" id="stat-heat-res">0%</span>
+              </div>
+              <div class="tome-stat-card">
+                <span class="stat-name">🏃 Movement Speed</span>
+                <span class="stat-val" id="stat-speed">100%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Floating Item Hover Tooltip -->
+        <div id="tome-item-tooltip" class="tome-tooltip hidden">
+          <div class="tooltip-title" id="tooltip-item-name">Item Name</div>
+          <div class="tooltip-type" id="tooltip-item-type">Resource</div>
+          <div class="tooltip-desc" id="tooltip-item-desc">Item description goes here.</div>
+          <div class="tooltip-action" id="tooltip-item-action">Shift-Click to equip or quick-move</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
